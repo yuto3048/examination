@@ -40,10 +40,10 @@ for i in data_dict:
     for j in data_dict[i]:
         if j['ping'] == '-' and failure == False:
             if count == 0:
-                start_time = time_decorator(j['time'])
+                start_time = j['time']
             count += 1
         if j['ping'] != '-' and failure == True:
-            end_time = time_decorator(j['time'])
+            end_time = j['time']
             failure_list.append({'ipaddr': i, 'start_time': start_time, 'end_time': end_time})
             failure_ip_list.append(i)
             failure = False
@@ -53,15 +53,27 @@ for i in data_dict:
     if failure == True:
         failure_list.append({'ipaddr': i, 'start_time': start_time, 'end_time': ''})
         failure_ip_list.append(i)
-        
+
+#2つの期間の重複を返す
+def is_duplicate(start_a, end_a, start_b, end_b):
+    return start_a <= end_b and start_b <= end_a
+
+#サブネット内すべてに障害があるか確認し、時間の重複があるかチェック
+subnet_failure_list = []
 for i in subnet_dict:
-    print(i)
     bool = True
     for j in subnet_dict[i]:
-        print(j)
         if j not in failure_ip_list:
             bool = False
-    print(bool)
+    if bool:
+        for j in range(len(subnet_dict[i])-1):
+            for k in failure_list:
+                if k['ipaddr'] == subnet_dict[i][j]:
+                    start_time_a = k['start_time']
+                    end_time_a = k['end_time']
+                if k['ipaddr'] == subnet_dict[i][j + 1]:
+                    start_time_b = k['start_time']
+                    end_time_b = k['end_time']
 
 #出力
 for i in failure_list:
